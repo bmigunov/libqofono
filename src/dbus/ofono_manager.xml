@@ -2,6 +2,12 @@
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
 <node name="">
 	<interface name="org.ofono.Manager">
+		 <method name="GetLockedByMdmImsiArray">
+			<arg type="as" direction="out"/>
+		 </method>
+		 <method name="SetLockedByMdmImsiArray">
+			<arg type="as" direction="in"/>
+		 </method>
 		 <method name="GetModems">
 			 <arg type="a(oa{sv})" direction="out"/>
 			 <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="ObjectPathPropertiesList"/>

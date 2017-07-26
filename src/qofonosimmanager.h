@@ -43,6 +43,7 @@ class QOFONOSHARED_EXPORT QOfonoSimManager : public QOfonoModemInterface
     Q_PROPERTY(QVariantMap pinRetries READ pinRetries NOTIFY pinRetriesChanged)
     Q_PROPERTY(bool fixedDialing READ fixedDialing NOTIFY fixedDialingChanged)
     Q_PROPERTY(bool barredDialing READ barredDialing NOTIFY barredDialingChanged)
+    Q_PROPERTY(bool lockedByMdm READ lockedByMdm NOTIFY lockedByMdmChanged)
 
 public:
     class SharedPointer;
@@ -95,6 +96,7 @@ public:
     QVariantMap pinRetries() const; //
     bool fixedDialing() const;
     bool barredDialing() const;
+    bool lockedByMdm() const;
     bool isValid() const;
 
 Q_SIGNALS:
@@ -112,6 +114,7 @@ Q_SIGNALS:
     void pinRetriesChanged(const QVariantMap &pinRetries);
     void fixedDialingChanged(bool fixedDialing);
     void barredDialingChanged(bool barredDialing);
+    void lockedByMdmChanged(bool lockedByMdm);
 
     void enterPinComplete(QOfonoSimManager::Error error, const QString &errorString);
     void resetPinComplete(QOfonoSimManager::Error error, const QString &errorString);

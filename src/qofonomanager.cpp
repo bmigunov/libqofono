@@ -21,12 +21,15 @@ class QOfonoManager::Private
 {
 public:
     OfonoManager *ofonoManager;
+    QStringList lockedByMdmImsiArray;
     QStringList modems;
     bool available;
 
     Private() : ofonoManager(NULL), available(false) {}
 
     void getModems(QOfonoManager *manager);
+    void getLockedByMdmImsiArray(QOfonoManager *manager);
+    void setLockedByMdmImsiArray(QOfonoManager *manager, const QStringList &imsis);
 };
 
 void QOfonoManager::Private::getModems(QOfonoManager *manager)
@@ -36,6 +39,26 @@ void QOfonoManager::Private::getModems(QOfonoManager *manager)
             ofonoManager->GetModems(), ofonoManager),
             SIGNAL(finished(QDBusPendingCallWatcher*)), manager,
             SLOT(onGetModemsFinished(QDBusPendingCallWatcher*)));
+    }
+}
+
+void QOfonoManager::Private::getLockedByMdmImsiArray(QOfonoManager *manager)
+{
+    if (ofonoManager) {
+        connect(new QDBusPendingCallWatcher(
+            ofonoManager->GetLockedByMdmImsiArray(), ofonoManager),
+            SIGNAL(finished(QDBusPendingCallWatcher*)), manager,
+            SLOT(onGetLockedByMdmImsiArrayFinished(QDBusPendingCallWatcher*)));
+    }
+}
+
+void QOfonoManager::Private::setLockedByMdmImsiArray(QOfonoManager *manager, const QStringList &imsis)
+{
+    if (ofonoManager) {
+        connect(new QDBusPendingCallWatcher(
+            ofonoManager->SetLockedByMdmImsiArray(imsis), ofonoManager),
+            SIGNAL(finished(QDBusPendingCallWatcher*)), manager,
+            SLOT(onSetLockedByMdmImsiArrayFinished(QDBusPendingCallWatcher*)));
     }
 }
 
@@ -62,6 +85,21 @@ QOfonoManager::QOfonoManager(QObject *parent) :
 QOfonoManager::~QOfonoManager()
 {
     delete d_ptr;
+}
+
+QStringList QOfonoManager::lockedByMdmImsiArray() const
+{
+    return d_ptr->lockedByMdmImsiArray;
+}
+
+void QOfonoManager::setLockedByMdmImsiArray(const QStringList &imsis)
+{
+    if (d_ptr->lockedByMdmImsiArray != imsis) {
+        d_ptr->setLockedByMdmImsiArray(this, imsis);
+        // optimistically assume success.
+        d_ptr->lockedByMdmImsiArray = imsis;
+        Q_EMIT lockedByMdmImsiArrayChanged(imsis);
+    }
 }
 
 QStringList QOfonoManager::modems()
@@ -147,6 +185,37 @@ void QOfonoManager::onGetModemsFinished(QDBusPendingCallWatcher* watcher)
     }
 }
 
+void QOfonoManager::onGetLockedByMdmImsiArrayFinished(QDBusPendingCallWatcher* watcher)
+{
+    QDBusPendingReply<QStringList> reply(*watcher);
+    watcher->deleteLater();
+    if (reply.isError()) {
+        if (qofono::isTimeout(reply.error())) {
+            qDebug() << "Retrying GetLockedByMdmImsiArray...";
+            d_ptr->getLockedByMdmImsiArray(this);
+        } else {
+            qWarning() << reply.error();
+        }
+    } else {
+        const QStringList data = reply.value();
+        if (d_ptr->lockedByMdmImsiArray != data) {
+            d_ptr->lockedByMdmImsiArray = data;
+            Q_EMIT lockedByMdmImsiArrayChanged(data);
+        }
+    }
+}
+
+void QOfonoManager::onSetLockedByMdmImsiArrayFinished(QDBusPendingCallWatcher* watcher)
+{
+    QDBusPendingReply<void> reply(*watcher);
+    watcher->deleteLater();
+    if (reply.isError()) {
+        qWarning() << reply.error();
+    } else {
+        d_ptr->getLockedByMdmImsiArray(this);
+    }
+}
+
 void QOfonoManager::connectToOfono(const QString &)
 {
     if (!d_ptr->ofonoManager) {
@@ -159,6 +228,7 @@ void QOfonoManager::connectToOfono(const QString &)
             connect(mgr,
                 SIGNAL(ModemRemoved(QDBusObjectPath)),
                 SLOT(onModemRemoved(QDBusObjectPath)));
+            d_ptr->getLockedByMdmImsiArray(this);
             d_ptr->getModems(this);
         } else {
             delete mgr;

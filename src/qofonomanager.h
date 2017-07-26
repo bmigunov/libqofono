@@ -35,6 +35,9 @@ public:
     explicit QOfonoManager(QObject *parent = 0);
     ~QOfonoManager();
 
+    QStringList lockedByMdmImsiArray() const;
+    void setLockedByMdmImsiArray(const QStringList &imsis);
+
     QStringList modems();
     QString defaultModem();
     bool available() const;
@@ -48,11 +51,14 @@ Q_SIGNALS: // SIGNALS
     void availableChanged(bool available);
     void modemsChanged(const QStringList &modems);
     void defaultModemChanged(const QString &modem);
+    void lockedByMdmImsiArrayChanged(const QStringList &imsis);
 
 private slots:
     void onModemAdded(const QDBusObjectPath &path, const QVariantMap &var);
     void onModemRemoved(const QDBusObjectPath &path);
     void onGetModemsFinished(QDBusPendingCallWatcher*);
+    void onGetLockedByMdmImsiArrayFinished(QDBusPendingCallWatcher*);
+    void onSetLockedByMdmImsiArrayFinished(QDBusPendingCallWatcher*);
     void connectToOfono(const QString &);
     void ofonoUnregistered(const QString &);
 

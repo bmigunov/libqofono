@@ -32,6 +32,7 @@ static const QString kPreferredLanguages(QLatin1String("PreferredLanguages"));
 static const QString kRetries(QLatin1String("Retries"));
 static const QString kFixedDialing(QLatin1String("FixedDialing"));
 static const QString kBarredDialing(QLatin1String("BarredDialing"));
+static const QString kLockedByMdm(QLatin1String("LockedByMdm"));
 
 namespace QOfonoSimManagerPrivate
 {
@@ -173,6 +174,8 @@ void QOfonoSimManager::propertyChanged(const QString &property, const QVariant &
         Q_EMIT fixedDialingChanged(value.value<bool>());
     } else if (property == kBarredDialing) {
         Q_EMIT barredDialingChanged(value.value<bool>());
+    } else if (property == kLockedByMdm) {
+        Q_EMIT lockedByMdmChanged(value.value<bool>());
     }
 }
 
@@ -244,6 +247,11 @@ bool QOfonoSimManager::fixedDialing() const
 bool QOfonoSimManager::barredDialing() const
 {
     return getBool(kBarredDialing);
+}
+
+bool QOfonoSimManager::lockedByMdm() const
+{
+    return getBool(kLockedByMdm);
 }
 
 void QOfonoSimManager::setSubscriberNumbers(const QStringList &numbers)
